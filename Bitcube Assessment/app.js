@@ -4,10 +4,13 @@ var express                 = require("express"),
     bodyParser              = require("body-parser"),
     User                    = require("./models/user"),
     Info                    = require("./models/userInfo"),
+    bcrypt                  = require("bcrypt"),
     LocalStrategy           = require("passport-local"),
     passportLocalMongoose   = require("passport-local-mongoose"),
+    cookieParser            = require("cookie-parser"),
     flash                   = require("express-flash")
-    
+
+var cookieAge = (1000*60*60*24*10); //final number is the num days cookie will last
 mongoose.connect("mongodb://localhost:27017/bitcube_as", { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true });
 mongoose.set('useUnifiedTopology', true);
 var app = express();
@@ -15,8 +18,8 @@ app.set('view engine', 'ejs');
 
 app.use(require("express-session")({
     secret: "BitcubeIsTheSecret!",
-    resave: false,
-    saveUninitialized: false
+    resave: true,
+    saveUninitialized: true
 }));
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -24,6 +27,7 @@ app.use(express.static(__dirname + "/public"));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
+app.use(cookieParser());
 
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
@@ -42,10 +46,18 @@ app.get("/register", function (req, res) {
     res.render("register");
 })
 
+app.get("/login", function (req, res) {
+    var checkVal = req.cookies['rememberData'];
+    res.render("login",{value: checkVal});
+})
+
 app.get("/home", function (req, res) {
     res.render("home");
 })
 
+app.get("/profile", isLoggedIn, function (req, res) {
+    res.render("profile");
+})
 
 //post
 app.post("/register", function(req, res){
@@ -75,17 +87,17 @@ app.post("/register", function(req, res){
                             if(err) {
                                     console.log(err);
                             } else {
-                                console.log("Saved!");
                                 console.log("Information:\n"+reg);
                             }
                         });
                         res.redirect("/home");
                     } else {
                         console.log("Email is not unique");
-                        res.redirect("/register");
+                        res.redirect("/login");
                     }
                 }
-              });       
+              });
+                    
         } else {
             console.log("Invalid password");
             res.redirect("/register");
@@ -96,14 +108,29 @@ app.post("/register", function(req, res){
     }
 });
 
+app.post("/login", passport.authenticate("local", 
+    {
+        failureRedirect: "/login",
+        failureFlash: true
+    }), function(req, res) {
+        var cookieVal = req.body.remember;
+        if (cookieVal != 'on') {cookieVal="off";}
+        var cookinfo = {
+            email:   req.body.username,
+            val:        cookieVal
+        }
+        res.cookie('rememberData', cookinfo, {maxAge: cookieAge});
+        if (isLoggedIn) {
+            res.redirect('/profile'); 
+        }
+    });
 //=======================================
 
 app.listen(3000, function () { //runs the server
     console.log("Server now running...");
 });
 
-//FUNCTIONS =============================
-
+//FUNCTIONS ========================================================
 function verifyName(fname, lname) {
     return !(fname === "" && lname === "")
 }
@@ -112,3 +139,10 @@ function verifyPw(pw) {
     return ((pw.length>=6) && (/\d/.test(pw)) && (/\W/.test(pw)) && (/[A-Z]/.test(pw)) && (/[a-z]/.test(pw)));
     //using regular expressions to evaluate the validity of the password.
 };
+
+function isLoggedIn(req, res, next){
+    if(req.isAuthenticated()){
+        return next();
+    }
+    res.redirect("/login");
+}
