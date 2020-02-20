@@ -1,0 +1,44 @@
+body {
+    background-color: rgb(24, 24, 24);
+}
+.center {
+    text-align: center;
+}
+input {
+    background-color: rgb(34, 34, 34);
+    color: rgb(106, 32, 170);
+    font-family: 'Roboto', sans-serif;
+    font-size: 25px;
+    border-color: black;
+}
+
+#chkbx {
+    transform: scale(2);
+    margin-left: 15px;
+}
+
+label {
+    color: rgb(106, 32, 170);
+    font-family: 'Roboto', sans-serif;
+    font-size: 20px;
+    border-color: black;
+}
+
+button {
+    background-color: rgb(34, 34, 34);
+    color: rgb(106, 32, 170);
+    font-family: 'Roboto', sans-serif;
+    font-size: 25px;
+    border-color: black;
+}
+
+a {
+    font-family: 'Roboto', sans-serif;
+    font-size: 25px;
+}
+
+h1 {
+    font-family: 'Odibee Sans', cursive;
+    font-size: 100px;
+    color: rgb(85, 27, 135);
+}
