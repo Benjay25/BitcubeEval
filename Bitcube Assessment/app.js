@@ -59,6 +59,15 @@ app.get("/profile", isLoggedIn, function (req, res) {
     res.render("profile");
 })
 
+app.get("/logout", function(req, res) {
+    req.logOut();
+    res.redirect("/home");
+});
+
+app.get("/friends", function(req, res) {
+    res.render("friends");
+});
+
 //post
 app.post("/register", function(req, res){
     var reg = new Info({ //creates instance of user
@@ -124,6 +133,8 @@ app.post("/login", passport.authenticate("local",
             res.redirect('/profile'); 
         }
     });
+
+
 //=======================================
 
 app.listen(3000, function () { //runs the server
