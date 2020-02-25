@@ -8,6 +8,7 @@ var express                 = require("express"),
     LocalStrategy           = require("passport-local"),
     passportLocalMongoose   = require("passport-local-mongoose"),
     cookieParser            = require("cookie-parser"),
+    methodOverride          = require("method-override"),
     flash                   = require("express-flash")
 
 var cookieAge = (1000*60*60*24*10); //final number is the num days cookie will last
@@ -28,6 +29,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 app.use(cookieParser());
+app.use(methodOverride("_method"));
 
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
@@ -37,7 +39,7 @@ passport.deserializeUser(User.deserializeUser());
 //ROUTES
 //===================
 
-//get
+//GET
 app.get("/", function (req, res) {
     res.redirect("/home");
 })
@@ -56,7 +58,29 @@ app.get("/home", function (req, res) {
 })
 
 app.get("/profile", isLoggedIn, function (req, res) {
-    res.render("profile");
+    var emailV = req.cookies['rememberData'].email;
+    Info.findOne({email: emailV}, (err, out) => {
+        if (err)
+            console.log(err)
+        else {
+            res.render("profile", {info: out});
+        }
+    })
+})
+
+app.get("/profile/edit", isLoggedIn, function (req, res) {
+    var emailV = req.cookies['rememberData'].email;
+    Info.findOne({email: emailV}, (err, out) => {
+        if (err)
+            console.log(err)
+        else {
+            res.render("profileEdit", {info: out});
+        }
+    })
+})
+
+app.get("/profile/changepw", isLoggedIn, (req,res) => {
+    res.render("changepw", {validated: "no", username: req.cookies["rememberData"].email});
 })
 
 app.get("/logout", function(req, res) {
@@ -64,12 +88,12 @@ app.get("/logout", function(req, res) {
     res.redirect("/home");
 });
 
-app.get("/friends", function(req, res) {
+app.get("/friends", isLoggedIn, function(req, res) {
     res.render("friends");
 });
 
-//post
-app.post("/register", function(req, res){
+//POST
+app.post("/register", function(req, res){ //registers users if info is valid
     var reg = new Info({ //creates instance of user
         email: req.body.username,
         firstname: req.body.firstname,
@@ -99,7 +123,7 @@ app.post("/register", function(req, res){
                                 console.log("Information:\n"+reg);
                             }
                         });
-                        res.redirect("/home");
+                        res.redirect("/login");
                     } else {
                         console.log("Email is not unique");
                         res.redirect("/login");
@@ -117,7 +141,7 @@ app.post("/register", function(req, res){
     }
 });
 
-app.post("/login", passport.authenticate("local", 
+app.post("/login", passport.authenticate("local", //logs valid users in
     {
         failureRedirect: "/login",
         failureFlash: true
@@ -134,7 +158,80 @@ app.post("/login", passport.authenticate("local",
         }
     });
 
+app.post("/profile/changepw",passport.authenticate("local", {failureRedirect: "/profile/changepw"}), (req, res) => {
+        console.log("Successful registration");
+            res.render("changepw", {validated: 'yes'});
+    })
 
+//PUT
+app.put("/profile/edit", (req, res) => { //put route that handles profile editing
+    if (verifyName(req.body.firstname, req.body.lastname)) {
+        var emailV = req.cookies['rememberData'].email;
+        User.countDocuments({username: req.body.username}, function(err, result) { //count names with that email
+            if (err) {
+              console.log(err);
+            } else {
+                if (result == 0 || req.body.username == emailV) { //determines if unique or is the currently signed in email
+                    User.findOne({username: emailV}, (err, userOut) => { //update in User collection
+                        if (err) {console.log(err)} else {if (userOut) {
+                            userOut.username = req.body.username;
+                            userOut.save();
+                        } else {
+                            console.log("user object not working");
+                            res.redirect("/profile/edit");
+                        }}   
+                     });
+                     Info.findOne({email: emailV}, (err, out) => { //update in Info collection
+                        if (out) {
+                            out.firstname = req.body.firstname;
+                            out.lastname = req.body.lastname;
+                            out.email = req.body.username;
+                            out.username = req.body.username;
+                            out.save();
+                            var cookinfo = {
+                                email:   out.username,
+                                val:     req.cookies["rememberData"].val
+                            }
+                            res.cookie('rememberData', cookinfo, {maxAge: cookieAge});
+                            res.render("profile", {info: out});
+                        } else {
+                            res.send("Nothing found");
+                        }
+                    }); 
+                     
+                } else {
+                    console.log("Email is not unique");
+                    res.redirect("/profile/edit");
+                }
+            }
+          });
+    } else {
+        console.log("First and Last name fields cannot be blank");
+        res.redirect("/profile/edit");
+    }
+})
+
+app.put("/profile/changepw", (req, res) => { //PUT route that handles password changes
+    if (req.body.password == req.body.password2) {
+        if (verifyPw(req.body.password)) {
+            User.deleteOne({username: req.cookies['rememberData'].email}, (err) => {
+            });
+            User.register(new User({username: req.cookies['rememberData'].email}), req.body.password, function(err, user){
+                if(err){
+                    console.log(err);
+                    return res.redirect("/profile");
+                };
+                res.redirect("/profile");
+            });
+        } else {
+            console.log("Password is invalid");
+            res.render("changepw", {validated: "yes"});
+        }
+    } else {
+        console.log("Passwords do not match");
+        res.render("changepw", {validated: "yes"});
+    }
+});
 //=======================================
 
 app.listen(3000, function () { //runs the server

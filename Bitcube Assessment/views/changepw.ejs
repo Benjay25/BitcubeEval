@@ -1,0 +1,26 @@
+<%- include('./partials/header') %>
+<h1 class="center" class="loggedh1">Change Password</h1>
+<% if (validated == "no") { %>
+    <form class="center" action="/profile/changepw" method="POST">
+        <label for="password">Enter current password:</label>
+        <input type="hidden" value="<%=username%>" name="username">
+        <input autocomplete="new-password" type="password" name="password" placeholder="Enter new password">
+        <p><button>Submit</button></p>
+        </form>
+<% } else {%>
+    <form class="center" action="/profile/changepw?_method=PUT" method="POST">
+    <label for="password">Enter new password:</label>
+    <input autocomplete="new-password" type="password" name="password" placeholder="Enter new password">
+    <p><label for="password">Confirm password:</label>
+    <input autocomplete="new-password" type="password" name="password2" placeholder="Confirm password"></p>
+    <p><button>Submit</button></p>
+    </form>
+<% } %>
+
+<p class="center">
+    <a class="footerA" href="/profile">Profile</a>
+    <a class="footerA" href="/friends">Friends</a>
+    <a class="footerA" href="/logout">Logout</a>
+</p>
+</body>
+</html>

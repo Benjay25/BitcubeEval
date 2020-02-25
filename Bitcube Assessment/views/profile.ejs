@@ -1,3 +1,6 @@
 <%- include('./partials/header') %>
-<h1>Profile Page</h1>
+<h1 class="loggedh1 left">Profile Page</h1>
+<p class="left"><label for="">Name: </label>  <label class="info"><%= info.firstname +" "+info.lastname %></label></p> 
+   <label class="left" for="">E-mail: </label><label class="info"><%= info.username %></label>
+<p class="left"><a class="fakebtn" href="/profile/edit">Edit Profile</a><span class="spacespan"></span><a class="fakebtn" href="/profile/changepw">Change Password</a></p>
 <%- include('./partials/loggedFooter') %>

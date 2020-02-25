@@ -1,0 +1,10 @@
+<%- include('./partials/header') %>
+<h1 class="loggedh1 left">Edit Profile</h1>
+<form action="/profile/edit?_method=PUT" method="POST" class="left">
+<p><label for="firstname">First name: </label> <input type="text" name="firstname" value="<%= info.firstname%>"></p>
+<p><label for="lastname">Last name: </label> <input type="text" name="lastname"  value="<%= info.lastname%>"></p>
+<p><label id="fixinput" for="username">E-mail: </label><input type="text" name="username" value="<%= info.username%>"></p>
+<p><button>Submit</button></p>
+</form>
+
+<%- include('./partials/loggedFooter') %></p>

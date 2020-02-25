@@ -8,8 +8,9 @@ input {
     background-color: rgb(34, 34, 34);
     color: rgb(106, 32, 170);
     font-family: 'Roboto', sans-serif;
-    font-size: 25px;
+    font-size: 20px;
     border-color: black;
+    margin-left: 10px;
 }
 
 #chkbx {
@@ -20,16 +21,23 @@ input {
 label {
     color: rgb(106, 32, 170);
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     border-color: black;
 }
 
 button {
-    background-color: rgb(34, 34, 34);
-    color: rgb(106, 32, 170);
-    font-family: 'Roboto', sans-serif;
-    font-size: 25px;
-    border-color: black;
+    background-color: rgb(93, 28, 150);;
+         border:rgb(81, 26, 129);
+         border-style: outset;
+         color:  rgb(24, 24, 24);
+         padding: 2px 3px;
+         text-align: center;
+         text-decoration: none;
+         display: inline-block;
+         font-size: 25px;
+         font-weight: bold;
+         cursor: pointer;
+         font-family: 'Roboto', sans-serif;
 }
 
 a {
@@ -47,6 +55,34 @@ h1 {
     margin-right: 10px;
 }
 
-#spacespan {
+.spacespan {
     margin-left: 3.5%;
+}
+
+.info {
+    margin-left: 5%;
+    font-size: 18px;
+}
+
+.fakebtn {
+    background-color: rgb(93, 28, 150);;
+         border:rgb(81, 26, 129);
+         border-style: outset;
+         color:  rgb(24, 24, 24);
+         padding: 2px 3px;
+         text-align: center;
+         text-decoration: none;
+         display: inline-block;
+         font-size: 22px;
+         font-weight: bold;
+         cursor: pointer;
+         font-family: 'Roboto', sans-serif;
+}
+
+#fixinput {
+    margin-right: 39px;
+}
+
+.left {
+    margin-left: 2%;
 }
