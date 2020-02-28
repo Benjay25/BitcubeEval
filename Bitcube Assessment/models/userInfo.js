@@ -2,9 +2,11 @@ var mongoose                = require("mongoose");
 var passportLocalMongoose   = require("passport-local-mongoose");
 
 var InfoSchema = new mongoose.Schema({
-    email: String,
+    username: String,
     firstname: String,
-    lastname: String
+    lastname: String,
+    friends: Array,
+    requests: Array
 })
 
 InfoSchema.plugin(passportLocalMongoose);

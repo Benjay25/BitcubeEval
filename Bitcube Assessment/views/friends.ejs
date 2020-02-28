@@ -1,3 +1,52 @@
 <%- include('./partials/header') %>
-<h1>Friends</h1>
+
+<h1 class="left">Friends</h1>
+<table class="left">
+    <tr>
+        <td id="section1">
+            <% if (friends.length == 0) { %>
+            <p><label class="left">Oof mate, looks like you don't have any friends :/</label></p>
+        <% } else { %>
+        <%  friends.forEach((friend) => { %>
+            <div class="friend">
+                <%= friend.firstname %> <span>   </span> <%= friend.lastname %>
+            </div>
+            <% }) %>
+        <% }; %>
+        <p></p>
+        <form class="left" action="/friends" method="POST" autocomplete="off">
+        <label for="newFriend">Add new friend</label>
+        <input type="text" name="newFriend">
+        <p><button>Add Friend</button></p>
+        </form>
+        </td>
+        <td id="section2">
+            <% if (requests.length == 0) { %>
+                <label class="left">No friend requests</label>
+            <% } else { %>
+                <%  requests.forEach((element) => { %>
+                    <div class="req">
+                        <label for="" class="left"><%= element %></label>
+                        <table class="left"><tr>
+                            <td id="accepttbl">
+                                <form action="/friends/accept?_method=PUT" method="POST">
+                                    <input type="hidden" value="<%= element %>" name="username">
+                                    <button class="reqcommon" id="accept">Accept</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="/friends/reject?_method=PUT" method="POST">
+                                    <input type="hidden" value="<%= element %>" name="username">
+                                    <button class="reqcommon" id="reject">Reject</button>
+                                </form>
+                            </td></tr>
+                        </table>
+                    </div> 
+                <% }) %>
+        <% } %>
+        </td>
+    </tr>
+</table>
+
+
 <%- include('./partials/loggedFooter') %>

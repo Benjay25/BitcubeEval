@@ -3,8 +3,7 @@ var express                 = require("express"),
     passport                = require("passport"),
     bodyParser              = require("body-parser"),
     User                    = require("./models/user"),
-    Info                    = require("./models/userInfo"),
-    bcrypt                  = require("bcrypt"),
+    Info                    = require("./models/userInfo"),db
     LocalStrategy           = require("passport-local"),
     passportLocalMongoose   = require("passport-local-mongoose"),
     cookieParser            = require("cookie-parser"),
@@ -35,9 +34,9 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-//===================
+//======================================
 //ROUTES
-//===================
+//======================================
 
 //GET
 app.get("/", function (req, res) {
@@ -59,7 +58,7 @@ app.get("/home", function (req, res) {
 
 app.get("/profile", isLoggedIn, function (req, res) {
     var emailV = req.cookies['rememberData'].email;
-    Info.findOne({email: emailV}, (err, out) => {
+    Info.findOne({username: emailV}, (err, out) => { 
         if (err)
             console.log(err)
         else {
@@ -70,7 +69,7 @@ app.get("/profile", isLoggedIn, function (req, res) {
 
 app.get("/profile/edit", isLoggedIn, function (req, res) {
     var emailV = req.cookies['rememberData'].email;
-    Info.findOne({email: emailV}, (err, out) => {
+    Info.findOne({username: emailV}, (err, out) => { 
         if (err)
             console.log(err)
         else {
@@ -88,17 +87,49 @@ app.get("/logout", function(req, res) {
     res.redirect("/home");
 });
 
-app.get("/friends", isLoggedIn, function(req, res) {
-    res.render("friends");
+app.get("/friends", isLoggedIn, async function(req, res) {
+    var emailV   = req.cookies['rememberData'].email;
+    var friendsQ = getInfoQuery(emailV);
+    friendsQ.then((query) => {
+        var friends  = [];
+        var requests = [];
+        if (query.friends) {
+            for (var i=0; i<= query.friends.length; i++) {
+                if (query.friends[i])
+                friends.push(query.friends[i]);
+            }
+        }
+        if (query.requests) {
+            for (var i=0; i<= query.requests.length; i++) {
+                if (query.requests[i])
+                requests.push(query.requests[i]);
+            }
+        }
+        res.render("friends", {friends: friends, requests: requests}); 
+    });
+    
+    
 });
+//used for test purposes to delete all friends in DB
+app.get("/deleteFriends", (req, res) => {
+    var Q = Info.find({}).exec();
+    Q.then((query)=>{
+        query.forEach((element)=>{
+            element.friends = [];
+            element.save();
+        })
+        res.redirect("/friends");
+    })
+})
 
-//POST
+//POST ===================================
 app.post("/register", function(req, res){ //registers users if info is valid
     var reg = new Info({ //creates instance of user
-        email: req.body.username,
         firstname: req.body.firstname,
         lastname: req.body.lastname,
-        username: req.body.username
+        username: req.body.username,
+        friends: [],
+        requests: []
     })
     if (verifyName(reg.firstname, reg.lastname)) { //ensure names are not blank
         if (verifyPw(req.body.password)) { //check password
@@ -129,8 +160,7 @@ app.post("/register", function(req, res){ //registers users if info is valid
                         res.redirect("/login");
                     }
                 }
-              });
-                    
+              });  
         } else {
             console.log("Invalid password");
             res.redirect("/register");
@@ -148,7 +178,7 @@ app.post("/login", passport.authenticate("local", //logs valid users in
     }), function(req, res) {
         var cookieVal = req.body.remember;
         if (cookieVal != 'on') {cookieVal="off";}
-        var cookinfo = {
+        var cookinfo = { //create cookie with new login info
             email:   req.body.username,
             val:        cookieVal
         }
@@ -158,47 +188,94 @@ app.post("/login", passport.authenticate("local", //logs valid users in
         }
     });
 
-app.post("/profile/changepw",passport.authenticate("local", {failureRedirect: "/profile/changepw"}), (req, res) => {
+app.post("/profile/changepw", passport.authenticate("local", {failureRedirect: "/profile/changepw"}), (req, res) => {
         console.log("Successful registration");
             res.render("changepw", {validated: 'yes'});
     })
 
-//PUT
-app.put("/profile/edit", (req, res) => { //put route that handles profile editing
+app.post("/friends", (req, res) => {                            //creates friend request
+    var add = req.body.newFriend;
+    var emailV = req.cookies['rememberData'].email;
+    User.countDocuments({username: add}, (err,result) => {      //looks if user exists
+        if (result == 1) {
+            var query = Info.findOne({username: add}).exec();   //get query with request sender's info
+            query.then((Q)=> {
+                if (Q) {
+                    Q.requests.push(emailV);                    //adds logged in user's email to request array 
+                    Q.save();
+                } else {
+                    console.log("Q is undefined");
+                }
+            });
+            res.redirect("friends");
+        } else {
+            console.log("That user does not exist");
+            res.redirect("/friends");
+        }
+    });
+    
+})
+
+//PUT ==================================
+app.put("/friends/accept", (req, res) => {              //handles accepting friend requests
+    var emailV = req.cookies['rememberData'].email;
+    var sender = req.body.username;
+    Info.findOne({username: emailV}, (err, result) => { //fetch record of logged user
+        var Q = getInfoQuery(sender);
+        Q.then((query) => {
+            addFriendsArr(query, result, "your");       //adds info of request sender to user's friends arr
+
+            var sendr = getInfoQuery(sender);
+            sendr.then((sndr)=> {
+                var Q2 = getInfoQuery(emailV);
+                Q2.then((query) => {
+                    addFriendsArr(query, sndr, "their");//adds user's info to request sender's friends arr
+                    res.redirect("/friends") 
+                })            
+            })
+        })
+    })
+})
+
+app.put("/friends/reject", (req, res) => {                      //handles rejecting friend requests
+    var receiver = req.cookies['rememberData'].email;
+    var sender = req.body.username;
+    var Q = getInfoQuery(receiver);                     
+    Q.then((query)=> {
+        spliceArr(query.requests, sender);                      //deletes the username of request sender from requests array
+        query.save();
+        res.redirect("/friends");
+    })
+})
+
+app.put("/profile/edit", (req, res) => {                        //put route that handles profile editing
     if (verifyName(req.body.firstname, req.body.lastname)) {
         var emailV = req.cookies['rememberData'].email;
-        User.countDocuments({username: req.body.username}, function(err, result) { //count names with that email
+        var txtname = req.body.username;                        //value entered into the input field by user
+        User.countDocuments({username: txtname}, function(err, result) { //count names with that email
             if (err) {
               console.log(err);
             } else {
-                if (result == 0 || req.body.username == emailV) { //determines if unique or is the currently signed in email
-                    User.findOne({username: emailV}, (err, userOut) => { //update in User collection
+                if (result == 0 || txtname === emailV) {           //determines if unique
+                    User.findOne({username: emailV}, (err, userOut) => {    //update in User collection
                         if (err) {console.log(err)} else {if (userOut) {
-                            userOut.username = req.body.username;
+                            userOut.username = txtname;
                             userOut.save();
                         } else {
                             console.log("user object not working");
                             res.redirect("/profile/edit");
                         }}   
                      });
-                     Info.findOne({email: emailV}, (err, out) => { //update in Info collection
-                        if (out) {
-                            out.firstname = req.body.firstname;
-                            out.lastname = req.body.lastname;
-                            out.email = req.body.username;
-                            out.username = req.body.username;
-                            out.save();
-                            var cookinfo = {
-                                email:   out.username,
-                                val:     req.cookies["rememberData"].val
-                            }
-                            res.cookie('rememberData', cookinfo, {maxAge: cookieAge});
-                            res.render("profile", {info: out});
-                        } else {
-                            res.send("Nothing found");
-                        }
-                    }); 
-                     
+                        var Q = getInfoQuery(emailV);
+                            Q.then((user)=>{
+                                updateInfo(user, req);
+                                var cookinfo = {                                //update the cookie
+                                    email:   req.body.username,
+                                    val:     req.cookies["rememberData"].val
+                                }
+                                res.cookie('rememberData', cookinfo, {maxAge: cookieAge});
+                                res.render("profile", {info: user});
+                        });
                 } else {
                     console.log("Email is not unique");
                     res.redirect("/profile/edit");
@@ -215,14 +292,15 @@ app.put("/profile/changepw", (req, res) => { //PUT route that handles password c
     if (req.body.password == req.body.password2) {
         if (verifyPw(req.body.password)) {
             User.deleteOne({username: req.cookies['rememberData'].email}, (err) => {
+                User.register(new User({username: req.cookies['rememberData'].email}), req.body.password, function(err, user){
+                    if(err){
+                        console.log(err);
+                        return res.redirect("/profile");
+                    };
+                    res.redirect("/profile");
+                });
             });
-            User.register(new User({username: req.cookies['rememberData'].email}), req.body.password, function(err, user){
-                if(err){
-                    console.log(err);
-                    return res.redirect("/profile");
-                };
-                res.redirect("/profile");
-            });
+            
         } else {
             console.log("Password is invalid");
             res.render("changepw", {validated: "yes"});
@@ -238,7 +316,44 @@ app.listen(3000, function () { //runs the server
     console.log("Server now running...");
 });
 
-//FUNCTIONS ========================================================
+//FUNCTIONS =============================
+function getInfoQuery(emailV) {
+    var q =  Info.findOne({username: emailV}).exec();
+    return q;
+}
+function updateInfo(user, req) {
+    if (user) {
+        user.firstname = req.body.firstname;
+        user.lastname = req.body.lastname;
+        user.username = req.body.username;
+        console.log("---Info updated");
+        user.save();
+    }
+}
+
+function addFriendsArr(query, result, string) { //adds the info from 'query' to the friends array in 'results'
+        result['friends'].push({
+            firstname: query['firstname'],
+            lastname: query.lastname,
+            username: query.username
+        });
+        console.log("Added "+result.friends[0].firstname+" "+result.friends[0].lastname+" to "+string+" friends");
+        if (string === "your") {
+            spliceArr(result.requests, query.username);
+            result.save()
+        } else if (string === "their")
+            result.save()
+ }
+function spliceArr(arr, item) {                 //removes array element equal to the 'item' argument
+    var pos;
+    for (var i=0; i < arr.length; i++) {
+        if (arr[i] === item) {
+            pos = i;
+        }
+        arr.splice(pos, 1)  
+    }
+} 
+
 function verifyName(fname, lname) {
     return !(fname === "" && lname === "")
 }

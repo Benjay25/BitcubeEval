@@ -8,11 +8,15 @@
             <%= messages.error %>
             <% } %>
     </label>
-    <p>
-        <% if(value['val'] == "off") { %>
-            <input autocomplete="false" value="" type="text" name="username" placeholder="email" >
-        <% } else { %>
+    <p> 
+        <% if(value) { %>
+            <% if(value['val'] == "off") { %>
+                <input autocomplete="false" value="" type="text" name="username" placeholder="email" >
+            <% } else { %>
             <input value="<%= value['email'] %>" type="text" name="username" placeholder="email" >
+            <% } %>
+        <% } else { %>
+            <input autocomplete="false" value="" type="text" name="username" placeholder="email" >
         <% } %>
     </p>
     <p>
@@ -20,11 +24,16 @@
     </p>
     <p>
         <label for="remember">Remember my login details</label>
-        <% if(value['val'] == "off") { %>
-            <input id="chkbx" type="checkbox" name="remember" aria-required="false">
+        <% if(value) { %>
+            <% if(value['val'] == "off") { %>
+                <input id="chkbx" type="checkbox" name="remember" aria-required="false">
+            <% } else { %>
+                <input id="chkbx" type="checkbox" name="remember" checked aria-required="false">
+            <% } %>
         <% } else { %>
-            <input id="chkbx" type="checkbox" name="remember" checked aria-required="false">
+            <input id="chkbx" type="checkbox" name="remember" aria-required="false">
         <% } %>
+
     </p>
     <button>Login</button>
     <p><a href="/home">Home</a></p>

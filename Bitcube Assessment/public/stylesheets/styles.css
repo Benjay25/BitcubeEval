@@ -26,11 +26,11 @@ label {
 }
 
 button {
-    background-color: rgb(93, 28, 150);;
+         background-image: linear-gradient(to bottom right,rgb(100, 22, 168),rgb(62, 17, 99));
          border:rgb(81, 26, 129);
          border-style: outset;
          color:  rgb(24, 24, 24);
-         padding: 2px 3px;
+         padding: 4px 13px;
          text-align: center;
          text-decoration: none;
          display: inline-block;
@@ -43,11 +43,14 @@ button {
 a {
     font-family: 'Roboto', sans-serif;
     font-size: 25px;
+    color: rgb(106, 32, 170);
 }
 
 h1 {
     font-family: 'Odibee Sans', cursive;
     font-size: 100px;
+    margin-bottom: 20px;
+    margin-top: 30px;
     color: rgb(85, 27, 135);
 }
 
@@ -65,18 +68,18 @@ h1 {
 }
 
 .fakebtn {
-    background-color: rgb(93, 28, 150);;
-         border:rgb(81, 26, 129);
-         border-style: outset;
-         color:  rgb(24, 24, 24);
-         padding: 2px 3px;
-         text-align: center;
-         text-decoration: none;
-         display: inline-block;
-         font-size: 22px;
-         font-weight: bold;
-         cursor: pointer;
-         font-family: 'Roboto', sans-serif;
+    background-image: linear-gradient(to bottom right,rgb(100, 22, 168),rgb(62, 17, 99));
+    border:rgb(81, 26, 129);
+    border-style: outset;
+    color:  rgb(24, 24, 24);
+    padding: 4px 13px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
 }
 
 #fixinput {
@@ -85,4 +88,68 @@ h1 {
 
 .left {
     margin-left: 2%;
+}
+
+.right {
+    text-align: right;
+}
+
+.friend {
+    background-image: linear-gradient(rgb(39, 33, 44),rgb(37, 21, 49));
+    color: rgb(106, 32, 170);
+    font-size: 25px;
+    font-weight: bold;
+    padding: 2px 3px;
+    width: 50%;
+    text-shadow: 20px;
+    border-radius: 2%;
+    margin-bottom: 5px;
+}
+
+table {
+    width: 100%;    
+}
+
+#section1 {
+    width: 65%;
+}
+#section2 {
+    width: 35%;
+}
+
+#accepttbl {
+    width: 25%;
+}
+
+#accept {
+    background-image: linear-gradient(rgb(50, 180, 33),rgb(35, 124, 13));
+    text-align: right;
+}
+
+#reject {
+    background-image: linear-gradient(rgb(206, 13, 13),rgb(134, 10, 10));
+}
+
+.req {
+    display: block;
+    color: rgb(120, 27, 201);
+    background-image: linear-gradient(rgb(28, 23, 34),rgb(40, 23, 53));
+    font-size: 20;
+    font-family: 'Roboto', sans-serif;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 3px;
+    width: 90%;
+    border-style: ridge;
+    border-color: rgb(74, 4, 139);
+}
+
+.reqcommon {
+    margin-top: 10px;
+    border: none;
+    font-size: 18px;
+    padding: 8px 15px;
+    color: whitesmoke;
+    border-radius: 5%;
+    font-family: 'Roboto', sans-serif;
 }
